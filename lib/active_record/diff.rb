@@ -32,9 +32,14 @@ module ActiveRecord
         if attrs.nil?
           attrs = self.class.content_columns.map { |column| column.name.to_sym }
         elsif attrs.length == 1 && Hash === attrs.first
-          columns = self.class.content_columns.map { |column| column.name.to_sym }
-
-          attrs = columns + (attrs.first[:include] || []) - (attrs.first[:exclude] || [])
+          options = attrs.first
+          if options[:include] == :all
+            columns = self.class.columns.map { |column| column.name.to_sym }
+            attrs = columns - (options[:exclude] || [])
+          else
+            columns = self.class.content_columns.map { |column| column.name.to_sym }
+            attrs = columns + (options[:include] || []) - (options[:exclude] || [])
+          end
         end
 
         diff_each(attrs) do |attr_name|

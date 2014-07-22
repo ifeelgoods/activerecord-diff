@@ -8,6 +8,8 @@ ActiveRecord::Schema.define do
   create_table :people do |table|
     table.column :name, :string
     table.column :email_address, :string
+    table.column :company_id, :integer
+    table.column :post_count, :integer
   end
 end
 
@@ -19,9 +21,9 @@ describe 'ActiveRecord::Diff' do
       include ActiveRecord::Diff
     end
 
-    @person.create! :name => 'alice', :email_address => 'alice@example.com'
-    @person.create! :name => 'bob', :email_address => 'bob@example.com'
-    @person.create! :name => 'eve', :email_address => 'bob@example.com'
+    @person.create! :name => 'alice', :email_address => 'alice@example.com', :company_id => 3, :post_count => 5
+    @person.create! :name => 'bob', :email_address => 'bob@example.com', :company_id => 4, :post_count => 0
+    @person.create! :name => 'eve', :email_address => 'bob@example.com', :company_id => 4, :post_count => 0
 
     @people = @person.all
 
@@ -45,6 +47,17 @@ describe 'ActiveRecord::Diff' do
       @person.diff :id, :name
 
       @alice.diff(@bob).must_equal({:id => [1, 2], :name => %w( alice bob )})
+    end
+
+    it 'includes all attributes if specified' do
+      @person.diff :include => :all, :exclude => [:email_address]
+
+      @alice.diff(@bob).must_equal({
+        :id => [1, 2],
+        :name => %w( alice bob ),
+        :company_id => [3, 4],
+        :post_count => [5, 0]
+      })
     end
   end
 
