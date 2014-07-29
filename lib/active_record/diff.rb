@@ -34,8 +34,7 @@ module ActiveRecord
         elsif attrs.length == 1 && Hash === attrs.first
           options = attrs.first
           if options[:include] == :all
-            columns = self.class.columns.map { |column| column.name.to_sym }
-            attrs = columns - (options[:exclude] || [])
+            attrs = all_columns - (options[:exclude] || [])
           else
             columns = self.class.content_columns.map { |column| column.name.to_sym }
             attrs = columns + (options[:include] || []) - (options[:exclude] || [])
@@ -58,6 +57,12 @@ module ActiveRecord
 
         diff_hash
       end
+    end
+
+    def all_columns
+      columns = self.class.column_names.map(&:to_sym).reject { |c| self.class.stored_attributes.keys.include?(c) }
+      columns |=  self.class.stored_attributes.values.flatten
+      columns.uniq
     end
   end
 end
